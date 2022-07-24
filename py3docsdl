@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+
+import os
+import re
+import sys
+import requests
+from bs4 import BeautifulSoup, SoupStrainer
+import argparse
+import tarfile
+import shutil
+
+
+def get_version():
+    mainpage = "https://docs.python.org/3/download.html"
+
+    response = requests.get(mainpage, headers={"User-Agent": "Custom"})
+    status = response.status_code
+    content = response.text
+
+    match status:
+        case 200:
+            print(f"Good to go ({status})")
+        case _:
+            sys.exit("Couldn't get Python version. Try again :)")
+
+    strainer = SoupStrainer("li", attrs={"id": "cpython-language-and-version"})
+    soup = BeautifulSoup(content, "html.parser", parse_only=strainer)
+    elements = soup.find_all("li")
+
+    version = re.search(
+        r"(.*?) Documentation", elements[0].contents[1].get_text(strip=True)
+    ).group(1)
+    return version
+
+
+def update_docs(version):
+    try:
+        os.chdir("/Users/Eren/Downloads")
+        print("Downloading...")
+        url = requests.get(
+            f"https://docs.python.org/3/archives/python-{version}-docs-pdf-a4.tar.bz2"
+        )
+        if url.status_code == 200:
+            with open("py3docs.tar.bz2", "wb") as f:
+                f.write(url.content)
+        else:
+            sys.exit("Couldn't download docs. Try again :)")
+    except OSError:
+        sys.exit("Couldn't download due to OS error :/")
+    else:
+        print("Extracting...")
+        with tarfile.open("py3docs.tar.bz2", "r:bz2") as tar:
+            tar.extractall(os.getcwd())
+        os.remove(f"{os.getcwd()}/py3docs.tar.bz2")
+        print("Updating the tutorial...")
+        source = f"{os.getcwd()}/docs-pdf/tutorial.pdf"
+        destination = "/Users/Eren/Documents/python3-tutorial.pdf"
+        shutil.copy2(source, destination)
+        print("Done!")
+
+
+def main():
+    affirm = ("yes", "yeah", "yea", "y")
+    negative = ("no", "nah", "n")
+
+    print("Updating the Python Tutorial PDF guide.")
+    prompt = input("Would you like to keep the docs folder? > ")
+    if prompt.lower() in affirm:
+        print("OK! Keeping all the docs.")
+        update_docs(get_version())
+    elif prompt.lower() in negative:
+        print("OK! Just updating the tutorial.")
+        update_docs(get_version())
+        try:
+            os.chdir("/Users/Eren/Downloads")
+            docs_dir = f"{os.getcwd()}/docs-pdf"
+            if os.path.exists(docs_dir):
+                shutil.rmtree(docs_dir)
+            else:
+                print("Expected docs folder, didn't find one.")
+        except OSError:
+            sys.exit("Couldn't delete docs folder due to OS error :/")
+    else:
+        print("Aborting. Have a great day!")
+
+
+if __name__ == "__main__":
+    main()
