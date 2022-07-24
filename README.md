@@ -12,7 +12,7 @@ export PATH=$HOME/bin:/usr/local/sbin:$PATH
 
 ## py3docsdl
 
-A new little command-line script that automates downloading/updating docs, written entirely in Python, that I've also moved to my path (`~/bin`) -- where it joins `gitprepare` as another highly useful tool for my purposes.
+A new little command-line script that automates downloading/updating docs, written entirely in Python, that I've also moved to my path (`~/bin`) — where it joins `gitprepare` as another highly useful tool for my purposes.
 
 ## temp-convert.js
 
