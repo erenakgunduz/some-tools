@@ -10,6 +10,10 @@ export PATH=$HOME/bin:/usr/local/sbin:$PATH
 
 — one of many in my `~/.zshrc`.
 
+## py3docsdl
+
+A new little command-line script that automates downloading/updating docs, written entirely in Python, that I've also moved to my path (`~/bin`) -- where it joins `gitprepare` as another highly useful tool for my purposes.
+
 ## temp-convert.js
 
 A simple, unidirectional temperature conversion tool (from °F to °C and K). Using it is very straightforward (as you might have guessed):
