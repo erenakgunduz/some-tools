@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import re
+import shutil
 import sys
+import tarfile
+
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
-import argparse
-import tarfile
-import shutil
 
 
 def get_version():
     mainpage = "https://docs.python.org/3/download.html"
 
-    response = requests.get(mainpage, headers={"User-Agent": "Custom"})
+    response = requests.get(mainpage, headers={"User-Agent": "Custom"}, timeout=30)
     status = response.status_code
     content = response.text
 
@@ -24,7 +25,7 @@ def get_version():
             sys.exit("Couldn't get Python version. Try again :)")
 
     strainer = SoupStrainer("li", attrs={"id": "cpython-language-and-version"})
-    soup = BeautifulSoup(content, "html.parser", parse_only=strainer)
+    soup = BeautifulSoup(content, "lxml", parse_only=strainer)
     elements = soup.find_all("li")
 
     version = re.search(
@@ -35,10 +36,11 @@ def get_version():
 
 def update_docs(version) -> None:
     try:
-        os.chdir("/Users/Eren/Downloads")
+        os.chdir("/Users/eren/Downloads")
         print("Downloading...")
         url = requests.get(
-            f"https://docs.python.org/3/archives/python-{version}-docs-pdf-a4.tar.bz2"
+            f"https://docs.python.org/3/archives/python-{version}-docs-pdf-a4.tar.bz2",
+            timeout=30,
         )
         if url.status_code == 200:
             with open("py3docs.tar.bz2", "wb") as f:
@@ -49,12 +51,26 @@ def update_docs(version) -> None:
         sys.exit("Couldn't download due to OS error :/")
     else:
         print("Extracting...")
-        with tarfile.open("py3docs.tar.bz2", "r:bz2") as tar:
-            tar.extractall(os.getcwd())
+
+        def validate(tname) -> list:
+            "Check to make sure the tar file is good"
+            with tarfile.open(tname, "r:bz2") as tar:
+                if tar.getnames()[0] == "docs-pdf":
+                    return tar.getmembers()
+                return []
+
+        tarname = "py3docs.tar.bz2"
+        members = validate(tarname)
+        if len(members) > 0:
+            with tarfile.open(tarname, "r:bz2") as tar:
+                tar.extractall(os.getcwd(), members=members)
+        else:
+            sys.exit("Something's wrong with the tar file we got :/")
+
         os.remove(f"{os.getcwd()}/py3docs.tar.bz2")
         print("Updating the tutorial...")
         source = f"{os.getcwd()}/docs-pdf/tutorial.pdf"
-        destination = "/Users/Eren/Documents/python3-tutorial.pdf"
+        destination = "/Users/eren/Documents/python3-tutorial.pdf"
         shutil.copy2(source, destination)
         print("Done!")
 
@@ -98,7 +114,7 @@ def main():
         print("Just updating the tutorial as requested.")
         update_docs(get_version())
         try:
-            os.chdir("/Users/Eren/Downloads")
+            os.chdir("/Users/eren/Downloads")
             docs_dir = f"{os.getcwd()}/docs-pdf"
             if os.path.exists(docs_dir):
                 shutil.rmtree(docs_dir)
