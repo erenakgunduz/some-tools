@@ -11,7 +11,7 @@ import requests
 from bs4 import BeautifulSoup, SoupStrainer
 
 
-def get_version():
+def get_version() -> str:
     mainpage = "https://docs.python.org/3/download.html"
 
     response = requests.get(mainpage, headers={"User-Agent": "Custom"}, timeout=30)
@@ -30,11 +30,11 @@ def get_version():
 
     version = re.search(
         r"(.*?) Documentation", elements[0].contents[1].get_text(strip=True)
-    ).group(1)
-    return version
+    )
+    return version.group(1) if version else ""
 
 
-def update_docs(version) -> None:
+def update_docs(version: str) -> None:
     try:
         os.chdir("/Users/eren/Downloads")
         print("Downloading...")
@@ -52,7 +52,7 @@ def update_docs(version) -> None:
     else:
         print("Extracting...")
 
-        def validate(tname) -> list:
+        def validate(tname: str) -> list[tarfile.TarInfo]:
             "Check to make sure the tar file is good"
             with tarfile.open(tname, "r:bz2") as tar:
                 if tar.getnames()[0] == "docs-pdf":
